@@ -31,24 +31,28 @@
 
 (defvar clear-text-common-words nil)
 
+(defun clear-text-collect-common-words (file)
+  (setq clear-text-common-words-file file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char 1)
+    (while (not (eobp))
+      (push (buffer-substring-no-properties
+             (line-beginning-position)
+             (line-end-position))
+            clear-text-common-words)
+      (forward-line 1))))
+
 (defcustom clear-text-common-words-file
   (expand-file-name "1000-common-english-words.txt"
                     (file-name-directory
                      (or load-file-name buffer-file-name)))
-  "File to common words."
+  "File to common words.
+This variable should be set only with \\[customize], which is equivalent
+to using the function `clear-text-collect-common-words'."
   :group 'convenience
   :type 'file
-  :set (lambda (var val)
-         (set var val)
-         (with-temp-buffer
-           (insert-file-contents clear-text-common-words-file)
-           (goto-char 1)
-           (while (not (eobp))
-             (push (buffer-substring-no-properties
-                    (line-beginning-position)
-                    (line-end-position))
-                   clear-text-common-words)
-             (forward-line 1)))))
+  :set (lambda (_symbol value) (clear-text-collect-common-words value)))
 
 (defun clear-text-post-self-insert-hook ()
   (let* ((pt (point))
